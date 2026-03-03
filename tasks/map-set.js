@@ -10,41 +10,138 @@
 // Задача 1.1 — Создай Map из объекта
 // fromObject({ a: 1, b: 2 }) → Map { 'a' => 1, 'b' => 2 }
 function fromObject(obj) {
-  // твой код
+  return new Map(obj);
 }
 
 // Задача 1.2 — Преобразуй Map обратно в обычный объект
 // toObject(new Map([['a', 1], ['b', 2]])) → { a: 1, b: 2 }
 function toObject(map) {
-  // твой код
+  return Object.fromEntries(map);
 }
 
 // Задача 1.3 — Объедини два Map (значения второго перезаписывают первый)
 // mergeMaps(Map{a:1,b:2}, Map{b:99,c:3}) → Map{a:1,b:99,c:3}
 function mergeMaps(mapA, mapB) {
-  // твой код
+  const result = new Map(mapA);
+  for (const [k, v] of mapB) {
+    result.set(k, v);
+  }
+  return result;
 }
 
+const mapA = new Map(Object.entries({ a: 1, b: 2 }));
+const mapB = new Map(Object.entries({ b: 99, c: 3 }));
+
+// console.log(mergeMaps(mapA, mapB));
 // ── 2. Map как счётчик / хеш-таблица ────────────────────────────────────────
 
 // Задача 2.1 — Счётчик частоты символов
 // charFrequency("hello") → Map { 'h'=>1, 'e'=>1, 'l'=>2, 'o'=>1 }
 function charFrequency(str) {
-  // твой код
+  const map = new Map();
+  for (const char of str) {
+    map.set(char, (map.get() ?? 0) + 1);
+  }
+  return map;
 }
 
-// Задача 2.2 — Счётчик слов
+// Задача 2.2 — Счётчик словфа
 // wordCount("hello world hello") → Map { 'hello'=>2, 'world'=>1 }
 function wordCount(str) {
-  // твой код
+  const map = new Map();
+  const arr = str.split(" ");
+  for (const word of arr) {
+    map.set(word, (map.get(word) ?? 0) + 1);
+  }
+  return map;
 }
+
+// console.log(wordCount("hello world hello"));
 
 // Задача 2.3 — Two Sum через Map (O(n))
 // twoSum([2, 7, 11, 15], 9) → [0, 1]
 // twoSum([3, 2, 4], 6) → [1, 2]
 function twoSum(nums, target) {
-  // твой код
-  // Подсказка: для каждого nums[i] проверяй есть ли (target - nums[i]) в Map
+  const seen = new Map();
+
+  for (let i = 0; i < nums.length; i++) {
+    const complement = target - nums[i];
+
+    if (seen.has(complement)) {
+      return [seen.get(complement), i];
+    }
+
+    seen.set(nums[i], i);
+  }
+}
+
+// Задача A — Разогрев (проще чем twoSum)
+// Есть ли хоть одна пара с нужной суммой? Вернуть true/false
+// hasPair([2, 7, 11, 15], 9)  → true
+// hasPair([1, 2, 3], 10)      → false
+function hasPair(nums, target) {
+  const seen = new Map();
+
+  for (let i = 0; i < nums.length; i++) {
+    const complement = target - nums[i];
+
+    if (seen.has(complement)) {
+      return true;
+    }
+    seen.set(nums[i], i);
+  }
+  return false;
+}
+
+// Задача B — Чуть сложнее
+// Найти пару ЗНАЧЕНИЙ (не индексов), которые дают target
+// findPair([2, 7, 11, 15], 9)  → [2, 7]
+// findPair([3, 2, 4], 6)       → [2, 4]
+function findPair(nums, target) {
+  const seen = new Map();
+  for (let i = 0; i < nums.length; i++) {
+    const complement = target - nums[i];
+    if (seen.has(complement)) {
+      return [complement, nums[i]];
+    }
+    seen.set(nums[i], i);
+  }
+}
+
+// console.log(findPair([2, 7, 11, 15], 9));
+
+// Задача C — Разность вместо суммы
+// Найти два индекса где nums[j] - nums[i] = k (j > i)
+// hasDiff([1, 5, 3, 4], 4)  → true   // 5 - 1 = 4
+// hasDiff([1, 2, 3], 10)    → false
+function hasDiff(nums, k) {
+  const seen = new Map();
+
+  for (let i = 0; i < nums.length; i++) {
+    const complement = nums[i] - k;
+    if (seen.has(complement)) {
+      return [seen.get(complement), i];
+    }
+    seen.set(nums[i], i);
+  }
+}
+console.log(hasDiff([1, 5, 3, 4], 4));
+
+//  Задача D — Посчитать все пары
+// Сколько пар дают target? (каждая пара считается один раз)
+// countPairs([1, 5, 3, 4, 2], 6)  → 2   // [1,5] и [2,4]
+// countPairs([1, 1, 1], 2)        → 3   // [0,1],[0,2],[1,2]
+function countPairs(nums, target) {
+  const map = new Map();
+  let count = 0;
+  for (const num of nums) {
+    const complement = target - num;
+    if (map.has(complement)) {
+      count += map.get(complement);
+    }
+    map.set(num, map.get(num ?? 0) + 1);
+  }
+  return count;
 }
 
 // Задача 2.4 — Первый уникальный символ

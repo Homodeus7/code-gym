@@ -226,4 +226,15 @@ function solve(s) {
 
 const maxMultiple = (divisor, bound) => bound % divisor;
 
-console.log(maxMultiple(10, 55));
+// console.log(maxMultiple(10, 55));
+
+function narcissistic(value) {
+  const digits = String(value).split("");
+  const narcissNumber = digits.reduce(
+    (narciss, digit) => narciss + digit ** digits.length,
+    0,
+  );
+  return value === narcissNumber;
+}
+
+console.log(narcissistic(1652));
