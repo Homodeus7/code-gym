@@ -1,60 +1,78 @@
 # Code Gym
 
-> Daily coding exercises to rebuild problem-solving skills from scratch
-
-## О проекте
-
-Code Gym — структурированная программа практики JavaScript для восстановления навыков решения алгоритмических задач. Идеально подходит для тех, кто хочет вернуться к основам после работы с AI-инструментами или длительного перерыва.
+Практика JavaScript/TypeScript через задачи — Vanilla JS, Vue 3, React.
 
 ## Структура
 
 ```
-tasks/           # задачи по темам
-cheatsheets/     # шпаргалки и гайды
+draft/
+├── vanillajs/        # чистый JS/TS — алгоритмы, структуры данных
+│   ├── tasks/        # задачи по темам
+│   └── cheatsheets/  # шпаргалки
+├── vue/              # задачи в контексте Vue 3
+│   ├── src/tasks/
+│   └── src/cheatsheets/
+├── react/            # задачи в контексте React
+│   ├── src/tasks/
+│   └── src/cheatsheets/
+├── package.json
+└── pnpm-workspace.yaml
 ```
 
-### Задачи (`tasks/`)
-
-| Файл | Тема |
-|------|------|
-| `arrays.js` | Основы массивов |
-| `strings.js` | Манипуляции со строками |
-| `objects.js` | Объекты и Hash Tables |
-| `map-set.js` | Map и Set |
-| `algorithms.js` | Алгоритмы сортировки и поиска |
-| `closures.js` | Замыкания |
-| `recursion.js` | Рекурсия |
-| `emitter.js` | Event Emitter |
-| `jquery.js` | jQuery-подобные утилиты |
-| `draft.js` | Черновик / эксперименты |
-
-### Шпаргалки (`cheatsheets/`)
-
-- `array-methods-cheatsheet.md` — справочник по методам массивов
-- `loops-cheatsheet.md` — руководство по циклам в JavaScript
-- `big-o-cheatsheet.md` — алгоритмическая сложность с примерами
-- `recursion-guide.md` — гайд по рекурсии с визуализацией
-
-## Как использовать
-
-1. Откройте файл нужной темы из `tasks/`
-2. Прочитайте описание задачи
-3. Решите задачу БЕЗ запуска кода (тренировка мышления)
-4. Напишите решение
-5. Запустите для проверки:
+## Запуск
 
 ```bash
-npm run task tasks/arrays.js
+pnpm vue        # Vue 3 dev server
+pnpm react      # React dev server
 ```
 
-## Правила практики
+```bash
+# vanillajs — запуск конкретного файла
+cd vanillajs
+pnpm task tasks/arrays.js
+```
 
-- Не используйте ChatGPT/Claude для решения
-- Используйте шпаргалки для справки
-- Думайте о сложности алгоритма
-- Тестируйте граничные случаи
-- Пишите чистый, читаемый код
+## Vanillajs — задачи
 
-## Философия
+| Файл            | Тема          |
+| --------------- | ------------- |
+| `arrays.js`     | Массивы       |
+| `strings.js`    | Строки        |
+| `objects.js`    | Объекты       |
+| `map-set.js`    | Map и Set     |
+| `algorithms.js` | Алгоритмы     |
+| `closures.js`   | Замыкания     |
+| `recursion.js`  | Рекурсия      |
+| `emitter.js`    | Event Emitter |
 
-Цель не просто решить задачи, а **восстановить интуицию программирования**. Решайте задачи сначала в голове, потом на бумаге, и только потом в коде. Это развивает навык мышления алгоритмами, который теряется при постоянном использовании AI.
+## Vanillajs — шпаргалки
+
+| Файл                          | Тема                 |
+| ----------------------------- | -------------------- |
+| `array-methods-cheatsheet.md` | Методы массивов      |
+| `loops-cheatsheet.md`         | Циклы                |
+| `big-o-cheatsheet.md`         | Сложность алгоритмов |
+| `recursion-guide.md`          | Рекурсия             |
+| `typescript-types-guide.md`   | TypeScript типы      |
+
+## Vue — задачи
+
+| Файл             | Тема                                      |
+| ---------------- | ----------------------------------------- |
+| `reactivity.js`  | Реактивность: ref, reactive, computed     |
+| `components.js`  | Компоненты, props, emits                  |
+| `composables.js` | Composables / useXxx                      |
+| `directives.js`  | v-if, v-for, v-model, кастомные директивы |
+| `lifecycle.js`   | Хуки жизненного цикла                     |
+| `pinia.js`       | Pinia — стейт менеджмент                  |
+
+## React — задачи
+
+| Файл               | Тема                                 |
+| ------------------ | ------------------------------------ |
+| `hooks.tsx`        | useState, useEffect, useRef, useMemo |
+| `components.tsx`   | Компоненты, props, children          |
+| `custom-hooks.tsx` | Кастомные хуки                       |
+| `context.tsx`      | Context API                          |
+| `performance.tsx`  | memo, useCallback, useMemo           |
+| `forms.tsx`        | Управляемые формы                    |
