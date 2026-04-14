@@ -21,8 +21,8 @@ const counter2 = useCounter(10);
 // Синхронизирует ref с localStorage: при изменении ref — записывает, при инициализации — читает.
 
 function useLocalStorage<T>(key: string, defaultValue: T) {
-  const stored = localStorage.getItem(key)
-  const data = ref<T>(stored !== null ? JSON.parse(stored) : defaultValue)
+  const stored = localStorage.getItem(key);
+  const data = ref<T>(stored !== null ? JSON.parse(stored) : defaultValue);
 
   function save() {
     localStorage.setItem(key, JSON.stringify(data.value));
@@ -61,14 +61,14 @@ const { width, height } = useWindowSize();
 // Реализуй composable useFetch(url) с состояниями data / loading / error.
 
 interface Post {
-  id: number
-  title: string
+  id: number;
+  title: string;
 }
 
 function useFetch(url: string) {
-  const data = ref<Post[] | null>(null)
-  const loading = ref(false)
-  const error = ref<string | null>(null)
+  const data = ref<Post[] | null>(null);
+  const loading = ref(false);
+  const error = ref<string | null>(null);
 
   async function execute() {
     loading.value = true;
@@ -78,7 +78,7 @@ function useFetch(url: string) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       data.value = await res.json();
     } catch (e) {
-      error.value = e instanceof Error ? e.message : String(e)
+      error.value = e instanceof Error ? e.message : String(e);
     } finally {
       loading.value = false;
     }

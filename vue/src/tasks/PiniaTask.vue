@@ -37,7 +37,12 @@ const useCartStore = defineStore("cart", () => {
     items.value.reduce((sum, i) => sum + i.price * i.qty, 0),
   );
 
-  function addItem(item: { id: number; name: string; price: number; qty?: number }) {
+  function addItem(item: {
+    id: number;
+    name: string;
+    price: number;
+    qty?: number;
+  }) {
     const existing = items.value.find((i) => i.id === item.id);
     if (existing) existing.qty++;
     else items.value.push({ ...item, qty: 1 });

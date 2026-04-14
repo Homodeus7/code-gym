@@ -13,20 +13,22 @@ const taskComponents = {
   lifecycle: defineAsyncComponent(() => import("./tasks/LifecycleTask.vue")),
   async: defineAsyncComponent(() => import("./tasks/AsyncTask.vue")),
   search: defineAsyncComponent(() => import("./tasks/SearchTask.vue")),
-  reactivityDeep: defineAsyncComponent(() => import("./tasks/ReactivityDeepTask.vue")),
+  reactivityDeep: defineAsyncComponent(
+    () => import("./tasks/ReactivityDeepTask.vue"),
+  ),
 };
 
 const navItems: { key: TaskKey; label: string; emoji: string }[] = [
-  { key: 'reactivity', label: 'Реактивность', emoji: '⚡' },
-  { key: 'components', label: 'Компоненты', emoji: '🧩' },
-  { key: 'pinia', label: 'Pinia', emoji: '🍍' },
-  { key: 'composables', label: 'Composables', emoji: '🔧' },
-  { key: 'forms', label: 'Формы', emoji: '📝' },
-  { key: 'lifecycle', label: 'Lifecycle', emoji: '♻️' },
-  { key: 'async', label: 'Async / Fetch', emoji: '🌐' },
-  { key: 'search', label: 'Search + Fetch', emoji: '🔍' },
-  { key: 'reactivityDeep', label: 'Reactivity Deep', emoji: '⚗️' },
-]
+  { key: "reactivity", label: "Реактивность", emoji: "⚡" },
+  { key: "components", label: "Компоненты", emoji: "🧩" },
+  { key: "pinia", label: "Pinia", emoji: "🍍" },
+  { key: "composables", label: "Composables", emoji: "🔧" },
+  { key: "forms", label: "Формы", emoji: "📝" },
+  { key: "lifecycle", label: "Lifecycle", emoji: "♻️" },
+  { key: "async", label: "Async / Fetch", emoji: "🌐" },
+  { key: "search", label: "Search + Fetch", emoji: "🔍" },
+  { key: "reactivityDeep", label: "Reactivity Deep", emoji: "⚗️" },
+];
 
 const cheatsheets = [
   { key: "vue3", label: "Vue 3 Composition API" },
@@ -35,14 +37,16 @@ const cheatsheets = [
   { key: "async", label: "Async паттерны" },
 ];
 
-type TaskKey = keyof typeof taskComponents
+type TaskKey = keyof typeof taskComponents;
 
-const activeTask = shallowRef<TaskKey | null>(null)
-const ActiveComponent = shallowRef<(typeof taskComponents)[TaskKey] | null>(null)
+const activeTask = shallowRef<TaskKey | null>(null);
+const ActiveComponent = shallowRef<(typeof taskComponents)[TaskKey] | null>(
+  null,
+);
 
 function openTask(key: TaskKey) {
-  activeTask.value = key
-  ActiveComponent.value = taskComponents[key]
+  activeTask.value = key;
+  ActiveComponent.value = taskComponents[key];
 }
 
 function goHome() {

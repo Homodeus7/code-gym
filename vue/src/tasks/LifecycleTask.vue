@@ -13,9 +13,9 @@ import {
 // --- TASK 1 ---
 // Отследи все хуки жизненного цикла и выводи лог в массив events.
 
-const events = ref<string[]>([])
-const count = ref(0)
-const inputRef = ref<HTMLInputElement | null>(null)
+const events = ref<string[]>([]);
+const count = ref(0);
+const inputRef = ref<HTMLInputElement | null>(null);
 
 function log(msg: string) {
   events.value.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
@@ -52,7 +52,7 @@ async function updateAndRead() {
 // Имитация подписки / отписки (setInterval).
 
 const timer = ref(0);
-let intervalId: ReturnType<typeof setInterval> | null = null
+let intervalId: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
   intervalId = setInterval(() => {
@@ -62,7 +62,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  if (intervalId !== null) clearInterval(intervalId)
+  if (intervalId !== null) clearInterval(intervalId);
   log("onBeforeUnmount — setInterval очищен");
 });
 </script>

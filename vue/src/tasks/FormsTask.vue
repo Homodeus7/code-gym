@@ -24,12 +24,12 @@ const numericInput = ref(0);
 const form = ref({ username: "", email: "", password: "" });
 
 const errors = computed(() => {
-  const e: Partial<Record<'username' | 'email' | 'password', string>> = {}
-  if (!form.value.username.trim()) e.username = 'Имя пользователя обязательно'
-  if (!form.value.email.includes('@')) e.email = 'Введите корректный email'
-  if (form.value.password.length < 6) e.password = 'Пароль не менее 6 символов'
-  return e
-})
+  const e: Partial<Record<"username" | "email" | "password", string>> = {};
+  if (!form.value.username.trim()) e.username = "Имя пользователя обязательно";
+  if (!form.value.email.includes("@")) e.email = "Введите корректный email";
+  if (form.value.password.length < 6) e.password = "Пароль не менее 6 символов";
+  return e;
+});
 
 const isValid = computed(() => Object.keys(errors.value).length === 0);
 const submitted = ref(false);

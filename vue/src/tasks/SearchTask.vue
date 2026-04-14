@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from "vue";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ТИПЫ — всегда определяй интерфейс для данных из API.
 // Это даёт автодополнение и ловит ошибки на этапе компиляции, не в рантайме.
 // ─────────────────────────────────────────────────────────────────────────────
 interface User {
-  id: number
-  name: string
-  email: string
-  phone: string
-  website: string
-  company: { name: string }
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  website: string;
+  company: { name: string };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -22,21 +22,21 @@ interface User {
 //   reactive — для объектов с несколькими полями, которые логически связаны.
 //   Правило: если тип — не объект или объект с одним смыслом — используй ref.
 // ─────────────────────────────────────────────────────────────────────────────
-const users = ref<User[]>([])
-const loading = ref(false)
-const error = ref<string | null>(null)
+const users = ref<User[]>([]);
+const loading = ref(false);
+const error = ref<string | null>(null);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // v-model под капотом = :value + @input.
 // Для <input> Vue делает это автоматически через директиву v-model.
 // Отдельный ref для строки поиска — это «источник правды» (single source of truth).
 // ─────────────────────────────────────────────────────────────────────────────
-const query = ref('')
+const query = ref("");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Лог поиска — объявляем ДО watch, который его использует.
 // ─────────────────────────────────────────────────────────────────────────────
-const searchLog = ref('')
+const searchLog = ref("");
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPUTED — кэшированное производное значение.
@@ -48,18 +48,18 @@ const searchLog = ref('')
 // ─────────────────────────────────────────────────────────────────────────────
 const filteredUsers = computed(() => {
   // trim() — не фильтровать по случайным пробелам.
-  const q = query.value.trim().toLowerCase()
+  const q = query.value.trim().toLowerCase();
 
   // Пустой запрос — возвращаем всё без фильтрации.
-  if (!q) return users.value
+  if (!q) return users.value;
 
   return users.value.filter(
     (u) =>
       u.name.toLowerCase().includes(q) ||
       u.email.toLowerCase().includes(q) ||
-      u.company.name.toLowerCase().includes(q)
-  )
-})
+      u.company.name.toLowerCase().includes(q),
+  );
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WATCH vs watchEffect:
@@ -77,8 +77,8 @@ const filteredUsers = computed(() => {
 watch(query, (newVal, oldVal) => {
   // watch срабатывает только при изменении — проверка newVal !== oldVal лишняя.
   // newVal и oldVal — значения ДО и ПОСЛЕ изменения.
-  searchLog.value = `Поиск: "${newVal}" (было: "${oldVal}")`
-})
+  searchLog.value = `Поиск: "${newVal}" (было: "${oldVal}")`;
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ПОЛУЧЕНИЕ ДАННЫХ — async функция, не async setup.
@@ -93,25 +93,25 @@ watch(query, (newVal, oldVal) => {
 //   data    ≠ null  → показываем данные
 // ─────────────────────────────────────────────────────────────────────────────
 async function fetchUsers() {
-  loading.value = true
-  error.value = null // сбрасываем ошибку перед новым запросом
+  loading.value = true;
+  error.value = null; // сбрасываем ошибку перед новым запросом
 
   try {
-    const res = await fetch('https://jsonplaceholder.typicode.com/users')
+    const res = await fetch("https://jsonplaceholder.typicode.com/users");
 
     // Всегда проверяй res.ok — fetch не бросает ошибку при 4xx/5xx.
     // fetch отклоняет Promise только при сетевых проблемах (нет сети и т.п.)
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
 
-    users.value = await res.json()
+    users.value = await res.json();
   } catch (e) {
     // catch (e) типизируется как unknown в strict-режиме.
     // Правильная проверка: instanceof Error перед .message
-    error.value = e instanceof Error ? e.message : 'Неизвестная ошибка'
+    error.value = e instanceof Error ? e.message : "Неизвестная ошибка";
   } finally {
     // finally — выполняется всегда: и при успехе, и при ошибке.
     // Идеальное место для loading = false.
-    loading.value = false
+    loading.value = false;
   }
 }
 
@@ -123,21 +123,21 @@ async function fetchUsers() {
 //   «нужен DOM / нужно что компонент готов». Стандартный паттерн Vue.
 //   Также: в SSR setup выполняется на сервере, onMounted — только на клиенте.
 // ─────────────────────────────────────────────────────────────────────────────
-onMounted(fetchUsers)
+onMounted(fetchUsers);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ВЫБОР ПОЛЬЗОВАТЕЛЯ — пример управляемого состояния выделения.
 // selectedId, а не selectedUser — храним минимум (id), User берём через computed.
 // ─────────────────────────────────────────────────────────────────────────────
-const selectedId = ref<number | null>(null)
+const selectedId = ref<number | null>(null);
 
 const selectedUser = computed(
-  () => users.value.find((u) => u.id === selectedId.value) ?? null
-)
+  () => users.value.find((u) => u.id === selectedId.value) ?? null,
+);
 
 function selectUser(id: number) {
   // Повторный клик — снимаем выделение (toggle).
-  selectedId.value = selectedId.value === id ? null : id
+  selectedId.value = selectedId.value === id ? null : id;
 }
 </script>
 

@@ -15,7 +15,7 @@ import {
   defineComponent,
   h,
   Transition,
-} from 'vue'
+} from "vue";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. ref vs reactive — в чём принципиальная разница
@@ -28,33 +28,35 @@ import {
 //                НО: при деструктуризации теряет реактивность!
 // ─────────────────────────────────────────────────────────────────────────────
 
-const count = ref(0) // примитив — только ref
+const count = ref(0); // примитив — только ref
 
 // reactive для объекта с несколькими связанными полями
 const user = reactive({
-  name: 'Алексей',
+  name: "Алексей",
   age: 28,
-  role: 'developer',
-})
+  role: "developer",
+});
 
 // ❌ ДЕСТРУКТУРИЗАЦИЯ REACTIVE ЛОМАЕТ РЕАКТИВНОСТЬ:
 // const { name } = user  →  name — это просто строка, не ref
 // Изменение user.name не обновит шаблон через деструктурированную переменную
 
 // ✅ ПРАВИЛЬНО — toRefs превращает каждое поле reactive-объекта в ref
-const { name, age } = toRefs(user)
+const { name, age } = toRefs(user);
 // Теперь name.value === user.name, и они связаны
 
 // toRef — для одного конкретного поля
-const role = toRef(user, 'role')
+const role = toRef(user, "role");
 
-const userLog = ref<string[]>([])
+const userLog = ref<string[]>([]);
 
 watch(
   // watch принимает: ref, reactive, getter-функцию, или массив из них
   () => ({ ...user }), // getter-функция — следим за снимком объекта
   (newVal, oldVal) => {
-    userLog.value.push(`${oldVal.name} → ${newVal.name}, возраст: ${newVal.age}`)
+    userLog.value.push(
+      `${oldVal.name} → ${newVal.name}, возраст: ${newVal.age}`,
+    );
   },
   {
     // deep: true — следить за вложенными изменениями reactive/ref-объектов.
@@ -67,9 +69,9 @@ watch(
 
     // flush: 'post' — callback после обновления DOM (по умолчанию 'pre' — до).
     // 'post' нужен если внутри callback обращаешься к DOM-элементам через templateRef.
-    flush: 'pre',
-  }
-)
+    flush: "pre",
+  },
+);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 2. watch vs watchEffect
@@ -87,15 +89,17 @@ watch(
 //   - Нет доступа к предыдущему значению
 // ─────────────────────────────────────────────────────────────────────────────
 
-const effectLog = ref<string[]>([])
-const ticker = ref(0)
-const factor = ref(2)
+const effectLog = ref<string[]>([]);
+const ticker = ref(0);
+const factor = ref(2);
 
 // watchEffect запускается сразу и при изменении ticker ИЛИ factor
 const stopEffect = watchEffect(() => {
   // Всё, что читается здесь — становится зависимостью автоматически
-  effectLog.value.push(`ticker=${ticker.value} × factor=${factor.value} = ${ticker.value * factor.value}`)
-})
+  effectLog.value.push(
+    `ticker=${ticker.value} × factor=${factor.value} = ${ticker.value * factor.value}`,
+  );
+});
 
 // watchEffect возвращает функцию остановки — важно для динамических подписок
 // stopEffect() — вызвать чтобы прекратить слежку
@@ -107,18 +111,18 @@ const stopEffect = watchEffect(() => {
 // Это полезно для «двусторонней» связи с трансформацией данных.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const celsius = ref(20)
+const celsius = ref(20);
 
 // computed с get + set — позволяет писать в fahrenheit и получать celsius
 const fahrenheit = computed({
   get() {
-    return +(celsius.value * 1.8 + 32).toFixed(1)
+    return +(celsius.value * 1.8 + 32).toFixed(1);
   },
   set(f: number) {
     // Запись в fahrenheit → пересчитываем celsius
-    celsius.value = +((f - 32) / 1.8).toFixed(1)
+    celsius.value = +((f - 32) / 1.8).toFixed(1);
   },
-})
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 4. shallowRef / shallowReactive — оптимизация для больших объектов
@@ -133,16 +137,18 @@ const fahrenheit = computed({
 // ─────────────────────────────────────────────────────────────────────────────
 
 const bigList = shallowRef([
-  { id: 1, text: 'Задача 1', done: false },
-  { id: 2, text: 'Задача 2', done: false },
-])
+  { id: 1, text: "Задача 1", done: false },
+  { id: 2, text: "Задача 2", done: false },
+]);
 
 // ❌ НЕ сработает — shallowRef не отслеживает изменения внутри массива
 // bigList.value[0].done = true
 
 // ✅ Правильно — заменяем весь массив (меняем .value целиком)
 function toggleTask(id: number) {
-  bigList.value = bigList.value.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
+  bigList.value = bigList.value.map((t) =>
+    t.id === id ? { ...t, done: !t.done } : t,
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -152,12 +158,12 @@ function toggleTask(id: number) {
 // Типичный кейс: публичный state из composable, который нельзя менять снаружи.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const privateCount = ref(0)
-const publicCount = readonly(privateCount) // снаружи только читаем
+const privateCount = ref(0);
+const publicCount = readonly(privateCount); // снаружи только читаем
 // publicCount.value++ — TypeError в рантайме + TypeScript-ошибка
 
 function incrementPrivate() {
-  privateCount.value++ // внутри — меняем через оригинальный ref
+  privateCount.value++; // внутри — меняем через оригинальный ref
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -172,12 +178,12 @@ function incrementPrivate() {
 
 // В реальном проекте ключ выносят в отдельный файл injection-keys.ts:
 // export const ThemeKey = Symbol('theme') as InjectionKey<Ref<string>>
-const ThemeKey = Symbol('theme')
+const ThemeKey = Symbol("theme");
 
-const theme = ref<'light' | 'dark'>('light')
+const theme = ref<"light" | "dark">("light");
 
 // provide делает theme доступным для ВСЕХ потомков этого компонента
-provide(ThemeKey, theme)
+provide(ThemeKey, theme);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 7. v-show vs v-if — когда что использовать
@@ -191,21 +197,22 @@ provide(ThemeKey, theme)
 //          Используй для частых переключений (табы, аккордеон, тогглы).
 // ─────────────────────────────────────────────────────────────────────────────
 
-const showIf = ref(true)
-const showShow = ref(true)
-const mountLog = ref<string[]>([])
+const showIf = ref(true);
+const showShow = ref(true);
+const mountLog = ref<string[]>([]);
 
 // Дочерний компонент для демонстрации (inline через defineComponent + h)
 const LifecycleWatcher = defineComponent({
   props: { label: String },
   setup(props) {
-    mountLog.value.push(`✅ onMounted: ${props.label}`)
-    return () => h('span', { style: 'font-size:0.85rem;color:#16a34a' }, props.label)
+    mountLog.value.push(`✅ onMounted: ${props.label}`);
+    return () =>
+      h("span", { style: "font-size:0.85rem;color:#16a34a" }, props.label);
   },
   unmounted() {
-    mountLog.value.push(`❌ onUnmounted: ${this.$props.label}`)
+    mountLog.value.push(`❌ onUnmounted: ${this.$props.label}`);
   },
-})
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 8. Transitions — анимации появления/исчезновения
@@ -221,8 +228,8 @@ const LifecycleWatcher = defineComponent({
 // mode="out-in" — сначала уходит старый элемент, потом появляется новый.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const activeTab = ref<'alpha' | 'beta' | 'gamma'>('alpha')
-const tabs = ['alpha', 'beta', 'gamma'] as const
+const activeTab = ref<"alpha" | "beta" | "gamma">("alpha");
+const tabs = ["alpha", "beta", "gamma"] as const;
 </script>
 
 <template>
@@ -251,7 +258,8 @@ const tabs = ['alpha', 'beta', 'gamma'] as const
         <div>
           <p class="label">Через toRefs (деструктурировано):</p>
           <p>
-            name: <strong>{{ name }}</strong> · age: <strong>{{ age }}</strong> · role:
+            name: <strong>{{ name }}</strong> · age:
+            <strong>{{ age }}</strong> · role:
             <strong>{{ role }}</strong>
           </p>
           <!--
@@ -259,12 +267,16 @@ const tabs = ['alpha', 'beta', 'gamma'] as const
             Изменение user.name автоматически отражается в name.value и наоборот.
             В шаблоне .value не нужен — Vue делает unwrap автоматически.
           -->
-          <button @click="role = role === 'developer' ? 'designer' : 'developer'">
+          <button
+            @click="role = role === 'developer' ? 'designer' : 'developer'"
+          >
             Сменить роль (через toRef)
           </button>
           <div class="log-mini">
             <p v-for="(l, i) in userLog" :key="i">{{ l }}</p>
-            <p v-if="!userLog.length" class="muted">Измени поля — сработает watch</p>
+            <p v-if="!userLog.length" class="muted">
+              Измени поля — сработает watch
+            </p>
           </div>
         </div>
       </div>
@@ -284,7 +296,12 @@ const tabs = ['alpha', 'beta', 'gamma'] as const
         <button @click="factor = factor === 2 ? 3 : 2">
           factor toggle (сейчас: {{ factor }})
         </button>
-        <button @click="stopEffect(); effectLog.push('⛔ watchEffect остановлен')">
+        <button
+          @click="
+            stopEffect();
+            effectLog.push('⛔ watchEffect остановлен');
+          "
+        >
           stopEffect()
         </button>
       </div>
@@ -299,8 +316,8 @@ const tabs = ['alpha', 'beta', 'gamma'] as const
     <section>
       <h2>3. computed get + set — конвертер температур</h2>
       <p class="note">
-        <code>fahrenheit</code> — computed с сеттером. Запись в него пересчитывает
-        <code>celsius</code>.
+        <code>fahrenheit</code> — computed с сеттером. Запись в него
+        пересчитывает <code>celsius</code>.
       </p>
       <div class="controls">
         <label>
@@ -339,7 +356,7 @@ const tabs = ['alpha', 'beta', 'gamma'] as const
           :class="{ done: task.done }"
           @click="toggleTask(task.id)"
         >
-          {{ task.done ? '✓' : '○' }} {{ task.text }}
+          {{ task.done ? "✓" : "○" }} {{ task.text }}
         </li>
       </ul>
     </section>
@@ -350,10 +367,13 @@ const tabs = ['alpha', 'beta', 'gamma'] as const
     <section>
       <h2>5. readonly — защита публичного состояния</h2>
       <p class="note">
-        <code>publicCount</code> — readonly-прокси. Прочитать можно, изменить нельзя
-        (TypeScript-ошибка + runtime warning). Меняем только через приватный ref.
+        <code>publicCount</code> — readonly-прокси. Прочитать можно, изменить
+        нельзя (TypeScript-ошибка + runtime warning). Меняем только через
+        приватный ref.
       </p>
-      <p>publicCount = <strong>{{ publicCount }}</strong></p>
+      <p>
+        publicCount = <strong>{{ publicCount }}</strong>
+      </p>
       <button @click="incrementPrivate">Increment (через privateCount)</button>
     </section>
 
@@ -363,12 +383,17 @@ const tabs = ['alpha', 'beta', 'gamma'] as const
     <section>
       <h2>6. provide / inject — передача через дерево</h2>
       <p class="note">
-        Текущий компонент предоставляет <code>theme</code> через <code>provide</code>.
-        Любой потомок может получить его через <code>inject(ThemeKey)</code> — без props.
+        Текущий компонент предоставляет <code>theme</code> через
+        <code>provide</code>. Любой потомок может получить его через
+        <code>inject(ThemeKey)</code> — без props.
       </p>
       <div class="theme-demo" :class="theme">
-        <p>Тема: <strong>{{ theme }}</strong></p>
-        <button @click="theme = theme === 'light' ? 'dark' : 'light'">Переключить тему</button>
+        <p>
+          Тема: <strong>{{ theme }}</strong>
+        </p>
+        <button @click="theme = theme === 'light' ? 'dark' : 'light'">
+          Переключить тему
+        </button>
         <!--
           В реальном проекте дочерний компонент делает:
           const theme = inject(ThemeKey)  →  получает реактивный ref
@@ -388,7 +413,9 @@ const tabs = ['alpha', 'beta', 'gamma'] as const
       <div class="grid-2">
         <div>
           <p class="label">v-if — монтирует/размонтирует компонент:</p>
-          <button @click="showIf = !showIf">{{ showIf ? 'Скрыть' : 'Показать' }} (v-if)</button>
+          <button @click="showIf = !showIf">
+            {{ showIf ? "Скрыть" : "Показать" }} (v-if)
+          </button>
           <!--
             При каждом showIf=true → onMounted срабатывает.
             При showIf=false → компонент уничтожается, DOM удаляется.
@@ -401,7 +428,7 @@ const tabs = ['alpha', 'beta', 'gamma'] as const
         <div>
           <p class="label">v-show — только display:none:</p>
           <button @click="showShow = !showShow">
-            {{ showShow ? 'Скрыть' : 'Показать' }} (v-show)
+            {{ showShow ? "Скрыть" : "Показать" }} (v-show)
           </button>
           <!--
             Компонент смонтирован ОДИН РАЗ и остаётся в DOM всегда.
@@ -415,7 +442,9 @@ const tabs = ['alpha', 'beta', 'gamma'] as const
       </div>
       <div class="log-mini" style="margin-top: 0.8rem">
         <p v-for="(l, i) in mountLog.slice(-6)" :key="i">{{ l }}</p>
-        <p v-if="!mountLog.length" class="muted">Нажми кнопки — увидишь lifecycle в логе</p>
+        <p v-if="!mountLog.length" class="muted">
+          Нажми кнопки — увидишь lifecycle в логе
+        </p>
       </div>
     </section>
 
@@ -425,8 +454,9 @@ const tabs = ['alpha', 'beta', 'gamma'] as const
     <section>
       <h2>8. &lt;Transition&gt; — анимации переключения</h2>
       <p class="note">
-        <code>mode="out-in"</code>: сначала уходит старый контент, потом появляется новый.
-        CSS-классы: <code>.fade-enter-from</code>, <code>.fade-leave-to</code> и т.д.
+        <code>mode="out-in"</code>: сначала уходит старый контент, потом
+        появляется новый. CSS-классы: <code>.fade-enter-from</code>,
+        <code>.fade-leave-to</code> и т.д.
       </p>
       <div class="tab-bar">
         <!--
