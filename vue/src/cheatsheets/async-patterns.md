@@ -3,12 +3,14 @@
 ## Базовый fetch в компоненте
 
 ```vue
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
 
-const data = ref(null);
+interface Item { id: number; title: string }
+
+const data = ref<Item[]>([]);
 const loading = ref(false);
-const error = ref(null);
+const error = ref<string | null>(null);
 
 async function fetchData() {
   loading.value = true;
@@ -18,7 +20,7 @@ async function fetchData() {
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
     data.value = await res.json();
   } catch (e) {
-    error.value = e.message;
+    error.value = (e as Error).message;
   } finally {
     loading.value = false;
   }
@@ -40,48 +42,59 @@ onMounted(fetchData);
 
 ## Promise.all — параллельные запросы
 
-```js
+```ts
 // Все запросы выполняются одновременно
 const [users, posts, comments] = await Promise.all([
   fetch('/api/users').then(r => r.json()),
   fetch('/api/posts').then(r => r.json()),
   fetch('/api/comments').then(r => r.json()),
-])
+]);
 
 // Если хотя бы один упадёт — Promise.all отклонится
 // Используй Promise.allSettled, чтобы получить все результаты независимо
-const results = await Promise.allSettled([...])
+const results = await Promise.allSettled([...]);
 results.forEach(r => {
-  if (r.status === 'fulfilled') console.log(r.value)
-  if (r.status === 'rejected') console.error(r.reason)
-})
+  if (r.status === 'fulfilled') console.log(r.value);
+  if (r.status === 'rejected') console.error(r.reason);
+});
 ```
 
 ---
 
 ## AbortController — отмена запросов
 
-```js
-let controller = null;
+```ts
+// С onWatcherCleanup (Vue 3.5+) — автоматически при повторном срабатывании
+import { watch, onWatcherCleanup } from "vue";
 
-async function startFetch() {
-  // Отменяем предыдущий запрос, если он ещё идёт
+watch(userId, async (id) => {
+  const controller = new AbortController();
+  onWatcherCleanup(() => controller.abort()); // очистка перед следующим вызовом
+
+  try {
+    const res = await fetch(`/api/user/${id}`, { signal: controller.signal });
+    data.value = await res.json();
+  } catch (e) {
+    if ((e as Error).name !== "AbortError") throw e;
+  }
+});
+```
+
+```ts
+// Без watcher — вручную
+let controller: AbortController | null = null;
+
+async function startFetch(url: string) {
   controller?.abort();
   controller = new AbortController();
-
   try {
     const res = await fetch(url, { signal: controller.signal });
     data.value = await res.json();
   } catch (e) {
-    if (e.name === "AbortError") {
-      console.log("Запрос отменён");
-    } else {
-      throw e;
-    }
+    if ((e as Error).name !== "AbortError") throw e;
   }
 }
 
-// Очищай в onUnmounted, чтобы избежать утечек
 onUnmounted(() => controller?.abort());
 ```
 
@@ -89,14 +102,17 @@ onUnmounted(() => controller?.abort());
 
 ## watch + fetch (зависимый запрос)
 
-```js
+```ts
 const userId = ref(1);
-const posts = ref([]);
+const posts = ref<Post[]>([]);
 
 watch(
   userId,
   async (id) => {
-    const res = await fetch(`/api/posts?userId=${id}`);
+    const controller = new AbortController();
+    onWatcherCleanup(() => controller.abort());
+
+    const res = await fetch(`/api/posts?userId=${id}`, { signal: controller.signal });
     posts.value = await res.json();
   },
   { immediate: true },
@@ -107,29 +123,26 @@ watch(
 
 ## Дебаунс для поиска
 
-```js
+```ts
 import { ref, watch } from "vue";
 
 const search = ref("");
-const results = ref([]);
-let debounceTimer = null;
+const results = ref<Result[]>([]);
 
 watch(search, (val) => {
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(async () => {
-    if (!val.trim()) {
-      results.value = [];
-      return;
-    }
-    const res = await fetch(`/api/search?q=${val}`);
+  const timer = setTimeout(async () => {
+    if (!val.trim()) { results.value = []; return; }
+    const res = await fetch(`/api/search?q=${encodeURIComponent(val)}`);
     results.value = await res.json();
   }, 400);
+
+  return () => clearTimeout(timer); // onWatcherCleanup-стиль через return
 });
 ```
 
 ---
 
-## Suspense (экспериментально в Vue 3)
+## Suspense
 
 ```vue
 <!-- Родитель -->
@@ -142,18 +155,20 @@ watch(search, (val) => {
   </template>
 </Suspense>
 
-<!-- AsyncComponent.vue — async setup() -->
-<script setup>
-const data = await fetch("/api/data").then((r) => r.json());
+<!-- AsyncComponent.vue — top-level await в <script setup> -->
+<script setup lang="ts">
 // Suspense ждёт завершения async setup
+const data = await fetch("/api/data").then((r) => r.json());
 </script>
 ```
+
+> Suspense стабилен в Vue 3.5+. При вложенных Suspense используй `:suspensible` на дочернем.
 
 ---
 
 ## Обработка ошибок
 
-```js
+```ts
 // Глобальный обработчик ошибок Vue
 const app = createApp(App);
 app.config.errorHandler = (err, instance, info) => {
@@ -161,7 +176,7 @@ app.config.errorHandler = (err, instance, info) => {
   // Отправь в Sentry или другой сервис
 };
 
-// onErrorCaptured в компоненте
+// onErrorCaptured в компоненте — ловит ошибки из дочерних компонентов
 import { onErrorCaptured } from "vue";
 onErrorCaptured((err, instance, info) => {
   console.log("Поймана ошибка:", err);
@@ -173,9 +188,9 @@ onErrorCaptured((err, instance, info) => {
 
 ## Polling (периодический запрос)
 
-```js
-const data = ref(null);
-let pollInterval = null;
+```ts
+const data = ref<Status | null>(null);
+let pollInterval: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
   async function poll() {
@@ -183,35 +198,31 @@ onMounted(() => {
     data.value = await res.json();
   }
 
-  poll(); // Сразу при монтировании
+  poll();
   pollInterval = setInterval(poll, 5000);
 });
 
-onUnmounted(() => clearInterval(pollInterval));
+onUnmounted(() => {
+  if (pollInterval) clearInterval(pollInterval);
+});
 ```
 
 ---
 
 ## Паттерны состояния запроса
 
-```js
-// Enum-стиль для состояния
-const STATUS = {
-  IDLE: "idle",
-  LOADING: "loading",
-  SUCCESS: "success",
-  ERROR: "error",
-};
-const status = ref(STATUS.IDLE);
+```ts
+type Status = "idle" | "loading" | "success" | "error";
+const status = ref<Status>("idle");
 
 async function fetchData() {
-  status.value = STATUS.LOADING;
+  status.value = "loading";
   try {
     data.value = await api.getData();
-    status.value = STATUS.SUCCESS;
+    status.value = "success";
   } catch (e) {
-    error.value = e.message;
-    status.value = STATUS.ERROR;
+    error.value = (e as Error).message;
+    status.value = "error";
   }
 }
 ```
@@ -219,7 +230,7 @@ async function fetchData() {
 ```vue
 <template>
   <div v-if="status === 'loading'">...</div>
-  <div v-else-if="status === 'error'">...</div>
+  <div v-else-if="status === 'error'">{{ error }}</div>
   <div v-else-if="status === 'success'">...</div>
   <div v-else>Нажмите для загрузки</div>
 </template>
@@ -229,33 +240,30 @@ async function fetchData() {
 
 ## Типичные ошибки
 
-```js
-// НЕПРАВИЛЬНО — setup не может быть async напрямую (только с Suspense)
-// const res = await fetch(...)  <-- не делай так без Suspense
+```ts
+// НЕПРАВИЛЬНО — top-level await без Suspense вызовет предупреждение
+// const res = await fetch(...)
 
-// ПРАВИЛЬНО — помещай async-логику в функции
+// ПРАВИЛЬНО — async-логика в функциях
 onMounted(async () => {
-  const res = await fetch(...)
-})
+  const res = await fetch(...);
+});
+
+// ПРАВИЛЬНО — top-level await с оборачивающим <Suspense>
+const data = await fetch(...).then(r => r.json());
 
 // НЕПРАВИЛЬНО — забытый await
-const data = fetch(url).json() // вернёт Promise, не данные
+const data = fetch(url).json(); // Promise, не данные
 
 // ПРАВИЛЬНО
-const res = await fetch(url)
-const data = await res.json()
+const res = await fetch(url);
+const data = await res.json();
 
-// НЕПРАВИЛЬНО — изменение ref после размонтирования (утечка памяти)
+// НЕПРАВИЛЬНО — изменение ref после размонтирования
 async function load() {
-  const data = await fetch(...)
-  data.value = data // компонент мог быть размонтирован
+  const result = await fetch(...);
+  data.value = result; // компонент мог быть размонтирован
 }
 
-// ПРАВИЛЬНО — проверять или использовать AbortController
-let mounted = true
-onUnmounted(() => { mounted = false })
-async function load() {
-  const data = await fetch(...)
-  if (mounted) data.value = data
-}
+// ПРАВИЛЬНО — использовать AbortController или onWatcherCleanup
 ```

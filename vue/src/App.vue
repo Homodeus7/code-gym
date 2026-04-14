@@ -12,6 +12,8 @@ const taskComponents = {
   forms: defineAsyncComponent(() => import("./tasks/FormsTask.vue")),
   lifecycle: defineAsyncComponent(() => import("./tasks/LifecycleTask.vue")),
   async: defineAsyncComponent(() => import("./tasks/AsyncTask.vue")),
+  search: defineAsyncComponent(() => import("./tasks/SearchTask.vue")),
+  reactivityDeep: defineAsyncComponent(() => import("./tasks/ReactivityDeepTask.vue")),
 };
 
 const navItems: { key: TaskKey; label: string; emoji: string }[] = [
@@ -22,6 +24,8 @@ const navItems: { key: TaskKey; label: string; emoji: string }[] = [
   { key: 'forms', label: 'Формы', emoji: '📝' },
   { key: 'lifecycle', label: 'Lifecycle', emoji: '♻️' },
   { key: 'async', label: 'Async / Fetch', emoji: '🌐' },
+  { key: 'search', label: 'Search + Fetch', emoji: '🔍' },
+  { key: 'reactivityDeep', label: 'Reactivity Deep', emoji: '⚗️' },
 ]
 
 const cheatsheets = [

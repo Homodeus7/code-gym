@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, computed, watch, watchEffect } from "vue";
+import { ref, computed, watch, watchEffect } from "vue";
 
 // --- TASK 1 ---
 // Создай ref-переменную count и кнопки +/- для её изменения.
@@ -8,10 +8,16 @@ import { ref, reactive, computed, watch, watchEffect } from "vue";
 const count = ref(0);
 
 // --- TASK 2 ---
-// Создай reactive-объект user с полями name и age.
-// Добавь инпуты для редактирования каждого поля через v-model.
+// Создай ref-объект user с полями name и age.
+// Предпочитай ref над reactive: проще деструктурировать, явное .value,
+// работает с любым типом. reactive теряет реактивность при деструктуризации.
 
-const user = reactive({ name: "", age: 0 });
+interface User {
+  name: string;
+  age: number;
+}
+
+const user = ref<User>({ name: "", age: 0 });
 
 // --- TASK 3 ---
 // Создай computed-свойство doubleCount, которое возвращает count * 2.
@@ -29,14 +35,14 @@ watch(count, (newVal, oldVal) => {
 // Используй watchEffect, чтобы автоматически логировать user.name при каждом его изменении.
 
 watchEffect(() => {
-  console.log("user.name =", user.name);
+  console.log("user.name =", user.value.name);
 });
 
 // --- TASK 6 ---
 // Создай computed fullInfo, который возвращает строку: "Имя: {name}, Возраст: {age}".
 
 const fullInfo = computed(
-  () => `Имя: ${user.name || "—"}, Возраст: ${user.age || 0}`,
+  () => `Имя: ${user.value.name || "—"}, Возраст: ${user.value.age}`,
 );
 </script>
 
@@ -56,7 +62,8 @@ const fullInfo = computed(
 
     <!-- TASK 2 -->
     <section>
-      <h2>Задача 2 — reactive-объект</h2>
+      <h2>Задача 2 — ref-объект</h2>
+      <!-- В шаблоне ref автоматически unwrap-ится: user.name, а не user.value.name -->
       <label>Имя: <input v-model="user.name" placeholder="Введи имя" /></label>
       <label>Возраст: <input v-model.number="user.age" type="number" /></label>
     </section>

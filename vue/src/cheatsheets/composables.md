@@ -5,21 +5,23 @@
 Composable — функция с именем `use*`, которая использует Vue Composition API
 и инкапсулирует повторно используемую логику с состоянием.
 
-```js
-// useCounter.js
-import { ref } from "vue";
+```ts
+// useCounter.ts
+import { ref, readonly } from "vue";
 
 export function useCounter(initial = 0) {
   const count = ref(initial);
   const increment = () => count.value++;
   const decrement = () => count.value--;
   const reset = () => (count.value = initial);
-  return { count, increment, decrement, reset };
+
+  // readonly — скрываем мутацию снаружи
+  return { count: readonly(count), increment, decrement, reset };
 }
 ```
 
 ```vue
-<script setup>
+<script setup lang="ts">
 import { useCounter } from "@/composables/useCounter";
 const { count, increment } = useCounter(10);
 </script>
@@ -33,18 +35,20 @@ const { count, increment } = useCounter(10);
 2. Вызываются **только внутри `<script setup>`** или другого composable
 3. Нельзя вызывать в обычных функциях, условиях, циклах
 4. Lifecycle hooks работают корректно, если вызваны синхронно в setup
+5. Возвращай `readonly()` для state, который не должен меняться снаружи
 
 ---
 
 ## useFetch — загрузка данных
 
-```js
-import { ref, watchEffect, toValue } from "vue";
+```ts
+import { ref, watchEffect, toValue, readonly } from "vue";
+import type { MaybeRefOrGetter } from "vue";
 
-export function useFetch(url) {
-  const data = ref(null);
+export function useFetch<T>(url: MaybeRefOrGetter<string>) {
+  const data = ref<T | null>(null);
   const loading = ref(false);
-  const error = ref(null);
+  const error = ref<string | null>(null);
 
   async function execute() {
     loading.value = true;
@@ -55,16 +59,16 @@ export function useFetch(url) {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       data.value = await res.json();
     } catch (e) {
-      error.value = e.message;
+      error.value = (e as Error).message;
     } finally {
       loading.value = false;
     }
   }
 
-  // watchEffect автоматически перезапускается при изменении url (если ref)
+  // watchEffect автоматически перезапускается при изменении url
   watchEffect(execute);
 
-  return { data, loading, error, refetch: execute };
+  return { data: readonly(data), loading: readonly(loading), error: readonly(error), refetch: execute };
 }
 ```
 
@@ -72,20 +76,16 @@ export function useFetch(url) {
 
 ## useLocalStorage
 
-```js
+```ts
 import { ref, watch } from "vue";
 
-export function useLocalStorage(key, defaultValue) {
+export function useLocalStorage<T>(key: string, defaultValue: T) {
   const stored = localStorage.getItem(key);
-  const data = ref(stored !== null ? JSON.parse(stored) : defaultValue);
+  const data = ref<T>(stored !== null ? JSON.parse(stored) : defaultValue);
 
-  watch(
-    data,
-    (val) => {
-      localStorage.setItem(key, JSON.stringify(val));
-    },
-    { deep: true },
-  );
+  watch(data, (val) => {
+    localStorage.setItem(key, JSON.stringify(val));
+  }, { deep: true });
 
   return data;
 }
@@ -99,25 +99,27 @@ theme.value = "dark"; // автоматически сохранится
 
 ## useEventListener
 
-```js
+```ts
 import { onMounted, onUnmounted } from "vue";
 
-export function useEventListener(target, event, handler) {
-  onMounted(() => target.addEventListener(event, handler));
-  onUnmounted(() => target.removeEventListener(event, handler));
+export function useEventListener<K extends keyof WindowEventMap>(
+  target: Window | HTMLElement,
+  event: K,
+  handler: (e: WindowEventMap[K]) => void,
+) {
+  onMounted(() => target.addEventListener(event, handler as EventListener));
+  onUnmounted(() => target.removeEventListener(event, handler as EventListener));
 }
 
 // Использование
-useEventListener(window, "resize", () => {
-  console.log("resize");
-});
+useEventListener(window, "resize", () => console.log("resize"));
 ```
 
 ---
 
 ## useWindowSize
 
-```js
+```ts
 import { ref } from "vue";
 import { useEventListener } from "./useEventListener";
 
@@ -138,7 +140,7 @@ export function useWindowSize() {
 
 ## useMouse
 
-```js
+```ts
 import { ref } from "vue";
 import { useEventListener } from "./useEventListener";
 
@@ -159,17 +161,18 @@ export function useMouse() {
 
 ## useDebounce
 
-```js
+```ts
 import { ref, watch } from "vue";
+import type { Ref } from "vue";
 
-export function useDebounce(value, delay = 300) {
-  const debounced = ref(value.value);
+export function useDebounce<T>(value: Ref<T>, delay = 300): Ref<T> {
+  const debounced = ref(value.value) as Ref<T>;
 
   watch(value, (newVal) => {
     const timer = setTimeout(() => {
       debounced.value = newVal;
     }, delay);
-    return () => clearTimeout(timer);
+    return () => clearTimeout(timer); // очистка при следующем срабатывании
   });
 
   return debounced;
@@ -185,13 +188,13 @@ watch(debouncedSearch, (val) => fetchResults(val));
 
 ## useToggle
 
-```js
+```ts
 import { ref } from "vue";
 
 export function useToggle(initialValue = false) {
   const state = ref(initialValue);
   const toggle = () => (state.value = !state.value);
-  return [state, toggle];
+  return [state, toggle] as const;
 }
 
 // Использование
@@ -202,11 +205,12 @@ const [isOpen, toggleOpen] = useToggle();
 
 ## Передача реактивных аргументов
 
-```js
+```ts
 import { toValue, watchEffect } from "vue";
+import type { MaybeRefOrGetter } from "vue";
 
-// toValue() — нормализует ref | getter | plain value
-export function useTitle(titleSource) {
+// toValue() — нормализует Ref | getter | plain value
+export function useTitle(titleSource: MaybeRefOrGetter<string>) {
   watchEffect(() => {
     document.title = toValue(titleSource);
   });
@@ -220,18 +224,38 @@ useTitle(() => `Корзина (${cartCount.value})`);
 
 ---
 
+## Options-паттерн для сложных composables
+
+```ts
+// Вместо множества аргументов — объект опций
+interface UseFetchOptions {
+  immediate?: boolean;
+  onError?: (e: Error) => void;
+}
+
+export function useFetchAdvanced<T>(url: MaybeRefOrGetter<string>, options: UseFetchOptions = {}) {
+  const { immediate = true, onError } = options;
+  // ...
+}
+
+// Использование
+useFetchAdvanced("/api/user", { immediate: false, onError: console.error });
+```
+
+---
+
 ## Структура папки composables
 
 ```
 src/
   composables/
-    useCounter.js
-    useFetch.js
-    useLocalStorage.js
-    useWindowSize.js
-    useEventListener.js
-    useToggle.js
-    useDebounce.js
+    useCounter.ts
+    useFetch.ts
+    useLocalStorage.ts
+    useWindowSize.ts
+    useEventListener.ts
+    useToggle.ts
+    useDebounce.ts
 ```
 
 ---

@@ -3,8 +3,8 @@
 ## Структура `<script setup>`
 
 ```vue
-<script setup>
-import { ref, reactive, computed, watch, watchEffect, onMounted } from "vue";
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from "vue";
 // Весь код доступен в шаблоне без явного return
 </script>
 ```
@@ -20,66 +20,89 @@ import { ref, reactive, computed, watch, watchEffect, onMounted } from "vue";
 | Доступ в шаблоне | `{{ count }}` (автоматически unwrap) | `{{ user.name }}`                |
 | Деструктуризация | теряет реактивность → `toRefs()`     | теряет реактивность → `toRefs()` |
 
-```js
-const count = ref(0);
+```ts
+const count = ref(0); // Ref<number>
 count.value++;
 
 const user = reactive({ name: "Иван", age: 25 });
 user.age++;
+
+// shallowRef — нет глубокой реактивности, быстрее для больших объектов
+const bigList = shallowRef<Item[]>([]);
+bigList.value = newList; // триггерит обновление
 ```
+
+> Предпочитай `ref` над `reactive` — проще в деструктуризации, явное `.value`.
 
 ---
 
 ## computed
 
-```js
+```ts
 const double = computed(() => count.value * 2);
 
 // Writable computed
 const fullName = computed({
   get: () => `${first.value} ${last.value}`,
-  set: (val) => {
+  set: (val: string) => {
     [first.value, last.value] = val.split(" ");
   },
 });
 ```
 
+> Computed — только чистые вычисления, без side-эффектов и мутаций.
+
 ---
 
 ## watch
 
-```js
+```ts
 // Одно значение
 watch(count, (newVal, oldVal) => { ... })
 
 // Несколько значений
 watch([a, b], ([newA, newB]) => { ... })
 
+// Свойство объекта — через getter
+watch(() => user.name, (newName) => { ... })
+
 // Глубокое слежение
 watch(user, (newUser) => { ... }, { deep: true })
 
 // Немедленный запуск
 watch(count, handler, { immediate: true })
+
+// Очистка при следующем вызове / размонтировании (Vue 3.5+)
+watch(id, (newId) => {
+  const controller = new AbortController();
+  fetch(`/api/${newId}`, { signal: controller.signal });
+  onWatcherCleanup(() => controller.abort());
+});
 ```
 
-## watchEffect
+## watchEffect / watchPostEffect
 
-```js
-// Автоматически отслеживает зависимости
+```ts
+// watchEffect — автоматически отслеживает зависимости
 watchEffect(() => {
-  console.log(count.value) // подписывается на count
-})
+  console.log(count.value); // подписывается на count
+});
+
+// watchPostEffect — запускается после обновления DOM (аналог flush: 'post')
+watchPostEffect(() => {
+  console.log(inputRef.value?.scrollHeight);
+});
 
 // Остановка
-const stop = watchEffect(() => { ... })
-stop() // отписаться
+const stop = watchEffect(() => { ... });
+stop(); // отписаться
 ```
 
 ---
 
 ## Lifecycle Hooks
 
-```js
+```ts
 import {
   onBeforeMount,
   onMounted,
@@ -112,10 +135,10 @@ onUnmounted(() => {
 ## Template Refs
 
 ```vue
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from "vue";
-const inputRef = ref(null);
-onMounted(() => inputRef.value.focus());
+const inputRef = ref<HTMLInputElement | null>(null);
+onMounted(() => inputRef.value?.focus());
 </script>
 
 <template>
@@ -127,13 +150,13 @@ onMounted(() => inputRef.value.focus());
 
 ## nextTick
 
-```js
+```ts
 import { nextTick } from "vue";
 
 count.value++;
 await nextTick();
 // Теперь DOM обновлён
-console.log(document.querySelector("#el").textContent);
+console.log(document.querySelector("#el")?.textContent);
 ```
 
 ---
@@ -141,37 +164,75 @@ console.log(document.querySelector("#el").textContent);
 ## props & emits
 
 ```vue
-<script setup>
-const props = defineProps({
-  title: { type: String, required: true },
-  count: { type: Number, default: 0 },
+<script setup lang="ts">
+// TypeScript-синтаксис (рекомендуется)
+const props = defineProps<{
+  title: string;
+  count?: number;
+}>();
+
+// Дефолтные значения через withDefaults
+const props = withDefaults(defineProps<{
+  title: string;
+  count?: number;
+}>(), {
+  count: 0,
 });
 
-const emit = defineEmits(["update", "close"]);
+// TypeScript-синтаксис для emits
+const emit = defineEmits<{
+  update: [value: string];
+  close: [];
+}>();
 emit("update", newValue);
 </script>
 ```
 
 ---
 
-## provide / inject
+## defineModel (Vue 3.4+)
 
-```js
-// Родитель
-import { provide } from "vue";
-provide("theme", "dark");
+```vue
+<!-- Использование -->
+<MyInput v-model="text" />
+<MyInput v-model:label="label" />
 
-// Дочерний
-import { inject } from "vue";
-const theme = inject("theme", "light"); // второй аргумент — default
+<!-- Внутри MyInput.vue — вместо props + emit -->
+<script setup lang="ts">
+const model = defineModel<string>(); // заменяет modelValue + update:modelValue
+const label = defineModel<string>("label");
+</script>
+<template>
+  <input v-model="model" />
+</template>
 ```
 
 ---
 
-## toRefs / toRef
+## provide / inject
 
-```js
-import { reactive, toRefs, toRef } from "vue";
+```ts
+// Используй Symbol-ключи для избежания коллизий
+import type { InjectionKey } from "vue";
+
+// keys.ts — общий файл ключей
+export const themeKey = Symbol("theme") as InjectionKey<string>;
+
+// Родитель
+import { provide } from "vue";
+provide(themeKey, "dark");
+
+// Дочерний — типизирован автоматически
+import { inject } from "vue";
+const theme = inject(themeKey, "light"); // тип: string
+```
+
+---
+
+## toRefs / toRef / toValue
+
+```ts
+import { reactive, toRefs, toRef, toValue } from "vue";
 
 const state = reactive({ x: 0, y: 0 });
 
@@ -179,48 +240,33 @@ const state = reactive({ x: 0, y: 0 });
 const { x, y } = toRefs(state);
 
 // Один prop
-const x = toRef(state, "x");
-```
+const xRef = toRef(state, "x");
 
----
-
-## v-model на компоненте
-
-```vue
-<!-- Использование -->
-<MyInput v-model="text" />
-
-<!-- Внутри MyInput.vue -->
-<script setup>
-defineProps(["modelValue"]);
-defineEmits(["update:modelValue"]);
-</script>
-<template>
-  <input
-    :value="modelValue"
-    @input="$emit('update:modelValue', $event.target.value)"
-  />
-</template>
+// toValue — нормализует ref | getter | значение (удобно в composables)
+toValue(ref(42));    // 42
+toValue(() => 42);   // 42
+toValue(42);         // 42
 ```
 
 ---
 
 ## Полезные паттерны
 
-```js
-// Условный рендер с v-if / v-show
-// v-if — удаляет из DOM, v-show — только display:none
+```html
+<!-- v-if — удаляет из DOM, v-show — только display:none -->
+<!-- v-if НЕ использовать вместе с v-for на одном элементе -->
 
-// :key важен в v-for для правильного обновления DOM
-// <li v-for="item in list" :key="item.id">
+<!-- :key важен в v-for для правильного обновления DOM -->
+<li v-for="item in sortedList" :key="item.id">
 
-// Модификаторы событий
-// @click.stop   — stopPropagation
-// @click.prevent — preventDefault
-// @keyup.enter  — только Enter
+<!-- Модификаторы событий -->
+<!-- @click.stop   — stopPropagation -->
+<!-- @click.prevent — preventDefault -->
+<!-- @keyup.enter  — только Enter -->
+<!-- @click.exact  — только при точном совпадении модификаторов -->
 
-// Модификаторы v-model
-// v-model.trim — обрезает пробелы
-// v-model.number — приводит к числу
-// v-model.lazy — обновляется на blur
+<!-- Модификаторы v-model -->
+<!-- v-model.trim — обрезает пробелы -->
+<!-- v-model.number — приводит к числу -->
+<!-- v-model.lazy — обновляется на blur -->
 ```
