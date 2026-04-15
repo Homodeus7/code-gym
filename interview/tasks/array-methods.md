@@ -21,13 +21,14 @@ console.log([1, 2, 3].myMap((x, i) => x + i)); // [1, 3, 5]
 
 ```js
 Array.prototype.myMap = function (callback) {
-  if (typeof callback !== 'function') {
-    throw new TypeError(callback + ' is not a function');
+  if (typeof callback !== "function") {
+    throw new TypeError(callback + " is not a function");
   }
 
   const result = [];
   for (let i = 0; i < this.length; i++) {
-    if (i in this) { // пропускаем "дырки" в разреженных массивах
+    if (i in this) {
+      // пропускаем "дырки" в разреженных массивах
       result[i] = callback(this[i], i, this);
     }
   }
@@ -56,7 +57,7 @@ Array.prototype.myFilter = function (callback) {
 
 // Проверка:
 console.log([1, 2, 3, 4].myFilter((x) => x % 2 === 0)); // [2, 4]
-console.log(['a', 'b', 'c'].myFilter((_, i) => i > 0));  // ['b', 'c']
+console.log(["a", "b", "c"].myFilter((_, i) => i > 0)); // ['b', 'c']
 ```
 
 <details>
@@ -66,8 +67,8 @@ console.log(['a', 'b', 'c'].myFilter((_, i) => i > 0));  // ['b', 'c']
 
 ```js
 Array.prototype.myFilter = function (callback) {
-  if (typeof callback !== 'function') {
-    throw new TypeError(callback + ' is not a function');
+  if (typeof callback !== "function") {
+    throw new TypeError(callback + " is not a function");
   }
 
   const result = [];
@@ -101,8 +102,13 @@ Array.prototype.myReduce = function (callback, initialValue) {
 
 // Проверка:
 console.log([1, 2, 3, 4].myReduce((acc, x) => acc + x, 0)); // 10
-console.log([1, 2, 3, 4].myReduce((acc, x) => acc + x));     // 10
-console.log([[1, 2], [3, 4]].myReduce((acc, x) => acc.concat(x), [])); // [1,2,3,4]
+console.log([1, 2, 3, 4].myReduce((acc, x) => acc + x)); // 10
+console.log(
+  [
+    [1, 2],
+    [3, 4],
+  ].myReduce((acc, x) => acc.concat(x), []),
+); // [1,2,3,4]
 ```
 
 <details>
@@ -112,8 +118,8 @@ console.log([[1, 2], [3, 4]].myReduce((acc, x) => acc.concat(x), [])); // [1,2,3
 
 ```js
 Array.prototype.myReduce = function (callback, initialValue) {
-  if (typeof callback !== 'function') {
-    throw new TypeError(callback + ' is not a function');
+  if (typeof callback !== "function") {
+    throw new TypeError(callback + " is not a function");
   }
 
   const hasInitial = arguments.length >= 2;
@@ -131,7 +137,7 @@ Array.prototype.myReduce = function (callback, initialValue) {
       }
     }
     if (!found) {
-      throw new TypeError('Reduce of empty array with no initial value');
+      throw new TypeError("Reduce of empty array with no initial value");
     }
   }
 

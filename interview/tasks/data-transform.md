@@ -60,6 +60,7 @@ function buildTree(items) {
 **Почему так:**
 
 Алгоритм за O(n):
+
 1. Первый проход — индексируем все узлы по `id`, добавляем пустой `children`.
 2. Второй проход — если `parentId === null`, это корень. Иначе находим родителя по `map[parentId]` и добавляем в его `children`.
 
@@ -80,7 +81,7 @@ function pipe(...fns) {
 const process = pipe(
   (x) => x + 1,
   (x) => x * 2,
-  (x) => x - 3
+  (x) => x - 3,
 );
 
 console.log(process(5)); // ((5+1)*2)-3 = 9

@@ -67,31 +67,31 @@ console.log("7");
 Что выведет этот код? Укажи полный порядок вывода.
 
 ```js
-console.log('start');
+console.log("start");
 
-setTimeout(() => console.log('timeout 1'), 0);
+setTimeout(() => console.log("timeout 1"), 0);
 
 Promise.resolve()
   .then(() => {
-    console.log('promise 1');
-    setTimeout(() => console.log('timeout 2'), 0);
+    console.log("promise 1");
+    setTimeout(() => console.log("timeout 2"), 0);
     return Promise.resolve();
   })
-  .then(() => console.log('promise 2'));
+  .then(() => console.log("promise 2"));
 
 async function bar() {
-  console.log('bar start');
+  console.log("bar start");
   await null;
-  console.log('bar after await');
+  console.log("bar after await");
   await Promise.resolve();
-  console.log('bar end');
+  console.log("bar end");
 }
 
 bar();
 
-queueMicrotask(() => console.log('microtask'));
+queueMicrotask(() => console.log("microtask"));
 
-console.log('end');
+console.log("end");
 ```
 
 <details>
@@ -115,6 +115,7 @@ timeout 2
 **Порядок выполнения по шагам:**
 
 **Синхронная фаза:**
+
 1. `console.log('start')` → **`start`**
 2. `setTimeout(() => 'timeout 1')` → macrotask queue: `[timeout 1]`
 3. `Promise.resolve().then(...)` → microtask queue: `[promise1_handler]`
@@ -122,16 +123,9 @@ timeout 2
 5. `queueMicrotask(...)` → microtask queue: `[promise1_handler, bar_resume_1, microtask_cb]`
 6. `console.log('end')` → **`end`**
 
-**Очистка microtask queue:**
-7. `promise1_handler`: **`promise 1`**, `setTimeout('timeout 2')` → macrotask: `[timeout 1, timeout 2]`, `return Promise.resolve()` → `[bar_resume_1, microtask_cb, promise2_handler]`
-8. `bar_resume_1`: **`bar after await`**, `await Promise.resolve()` → `[microtask_cb, promise2_handler, bar_resume_2]`
-9. `microtask_cb`: **`microtask`**
-10. `promise2_handler`: **`promise 2`**
-11. `bar_resume_2`: **`bar end`**
+**Очистка microtask queue:** 7. `promise1_handler`: **`promise 1`**, `setTimeout('timeout 2')` → macrotask: `[timeout 1, timeout 2]`, `return Promise.resolve()` → `[bar_resume_1, microtask_cb, promise2_handler]` 8. `bar_resume_1`: **`bar after await`**, `await Promise.resolve()` → `[microtask_cb, promise2_handler, bar_resume_2]` 9. `microtask_cb`: **`microtask`** 10. `promise2_handler`: **`promise 2`** 11. `bar_resume_2`: **`bar end`**
 
-**Macrotask queue:**
-12. `timeout 1` → **`timeout 1`**
-13. `timeout 2` → **`timeout 2`**
+**Macrotask queue:** 12. `timeout 1` → **`timeout 1`** 13. `timeout 2` → **`timeout 2`**
 
 </details>
 
@@ -148,15 +142,15 @@ timeout 2
 
 ```js
 // Предскажи порядок вывода и объясни почему:
-setTimeout(() => console.log('macro 1'), 0);
-setTimeout(() => console.log('macro 2'), 0);
+setTimeout(() => console.log("macro 1"), 0);
+setTimeout(() => console.log("macro 2"), 0);
 
 Promise.resolve().then(() => {
-  console.log('micro 1');
-  Promise.resolve().then(() => console.log('micro 2'));
+  console.log("micro 1");
+  Promise.resolve().then(() => console.log("micro 2"));
 });
 
-console.log('sync');
+console.log("sync");
 ```
 
 <details>
@@ -169,6 +163,7 @@ console.log('sync');
 **Microtask:** `Promise.then/catch/finally`, `queueMicrotask`, `MutationObserver` — выполняются **сразу после** текущей задачи, **перед** следующей макрозадачей. Вся очередь очищается за раз, включая новые микрозадачи добавленные в процессе.
 
 **Порядок цикла:**
+
 ```
 1. Выполнить одну макрозадачу
 2. Опустошить всю microtask queue (включая новые!)
@@ -177,6 +172,7 @@ console.log('sync');
 ```
 
 **Ответ на код задачи:**
+
 ```
 sync
 micro 1
@@ -186,6 +182,7 @@ macro 2
 ```
 
 **Шаги:**
+
 1. `setTimeout x2` → macrotask: `[macro 1, macro 2]`
 2. `Promise.resolve().then(...)` → microtask: `[micro1_handler]`
 3. `console.log('sync')` → **`sync`**

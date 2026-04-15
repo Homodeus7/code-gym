@@ -11,19 +11,19 @@
 Главная особенность: `NaN !== NaN` (единственное значение в JS, не равное самому себе).
 
 ```js
-typeof NaN // "number"
-NaN === NaN // false
+typeof NaN; // "number"
+NaN === NaN; // false
 
 // Способы проверки:
-isNaN("abc")        // true  — но сначала приводит к числу! isNaN("") === false
-Number.isNaN("abc") // false — строгая проверка, без приведения типов
-Number.isNaN(NaN)   // true  — правильный способ
+isNaN("abc"); // true  — но сначала приводит к числу! isNaN("") === false
+Number.isNaN("abc"); // false — строгая проверка, без приведения типов
+Number.isNaN(NaN); // true  — правильный способ
 
 // Когда возникает NaN:
-0 / 0           // NaN
-parseInt("abc") // NaN
-Math.sqrt(-1)   // NaN
-undefined + 1   // NaN
+0 / 0; // NaN
+parseInt("abc"); // NaN
+Math.sqrt(-1); // NaN
+undefined + 1; // NaN
 ```
 
 Рекомендуется всегда использовать `Number.isNaN()` вместо глобального `isNaN()`.
@@ -36,32 +36,32 @@ undefined + 1   // NaN
 
 **Ответ:**
 
-| | `undefined` | `null` | `NaN` |
-|---|---|---|---|
-| Тип | `"undefined"` | `"object"` | `"number"` |
-| Смысл | значение не присвоено | явное отсутствие значения | невалидный результат числовой операции |
-| == null | `true` | `true` | `false` |
+|         | `undefined`           | `null`                    | `NaN`                                  |
+| ------- | --------------------- | ------------------------- | -------------------------------------- |
+| Тип     | `"undefined"`         | `"object"`                | `"number"`                             |
+| Смысл   | значение не присвоено | явное отсутствие значения | невалидный результат числовой операции |
+| == null | `true`                | `true`                    | `false`                                |
 
 ```js
 let x;
-console.log(x)          // undefined — переменная объявлена, но не инициализирована
+console.log(x); // undefined — переменная объявлена, но не инициализирована
 
-let y = null            // null — явно «ничего»
-console.log(typeof y)   // "object" (историческая ошибка в JS)
+let y = null; // null — явно «ничего»
+console.log(typeof y); // "object" (историческая ошибка в JS)
 
-let z = 0 / 0
-console.log(z)          // NaN
-console.log(typeof z)   // "number"
+let z = 0 / 0;
+console.log(z); // NaN
+console.log(typeof z); // "number"
 
 // Сравнение:
-null == undefined       // true  (нестрогое)
-null === undefined      // false (строгое)
-null == 0               // false
-undefined == 0          // false
+null == undefined; // true  (нестрогое)
+null === undefined; // false (строгое)
+null == 0; // false
+undefined == 0; // false
 
 // Проверки:
-x == null               // true для null и undefined (удобный паттерн)
-Number.isNaN(z)         // true
+x == null; // true для null и undefined (удобный паттерн)
+Number.isNaN(z); // true
 ```
 
 ---
@@ -77,22 +77,22 @@ Number.isNaN(z)         // true
 `parseFloat(string)` — парсит строку как число с плавающей точкой.
 
 ```js
-parseInt("42px")      // 42 — берёт цифры до первого нечислового символа
-parseInt("px42")      // NaN — начинается с нечислового символа
-parseInt("10", 2)     // 2 — парсит "10" как двоичное число
-parseInt("010")       // 10 (в современных движках), но в старых — 8 (восьмеричное!)
-parseInt(0.000005)    // 0 — сначала toString(): "0.000005" → 0
-parseInt(0.0000005)   // 5 — toString(): "5e-7" → берёт "5" !
+parseInt("42px"); // 42 — берёт цифры до первого нечислового символа
+parseInt("px42"); // NaN — начинается с нечислового символа
+parseInt("10", 2); // 2 — парсит "10" как двоичное число
+parseInt("010"); // 10 (в современных движках), но в старых — 8 (восьмеричное!)
+parseInt(0.000005); // 0 — сначала toString(): "0.000005" → 0
+parseInt(0.0000005); // 5 — toString(): "5e-7" → берёт "5" !
 
-parseFloat("3.14abc") // 3.14
-parseFloat("abc")     // NaN
+parseFloat("3.14abc"); // 3.14
+parseFloat("abc"); // NaN
 
 // Главная ловушка — всегда указывай radix:
-parseInt("08", 10)    // 8 (без radix в старых движках было бы 0)
+parseInt("08", 10); // 8 (без radix в старых движках было бы 0)
 
 // Альтернатива без ловушек:
-Number("42px")        // NaN — строже, не прощает мусор
-+"42"                 // 42 — быстрое приведение к числу
+Number("42px") + // NaN — строже, не прощает мусор
+  "42"; // 42 — быстрое приведение к числу
 ```
 
 ---
@@ -164,18 +164,20 @@ Infinity    // true
 
 ```js
 // Практика:
-if ([]) console.log("truthy")   // выведет — массив всегда truthy!
-if ({}) console.log("truthy")   // выведет — объект всегда truthy!
+if ([]) console.log("truthy"); // выведет — массив всегда truthy!
+if ({}) console.log("truthy"); // выведет — объект всегда truthy!
 
 // Частая ошибка:
-const arr = []
-if (arr.length) { /* безопаснее, чем if (arr) */ }
+const arr = [];
+if (arr.length) {
+  /* безопаснее, чем if (arr) */
+}
 
 // Boolean coercion:
-Boolean(0)    // false
-Boolean("")   // false
-Boolean([])   // true
-!!null        // false — двойное отрицание как приведение к boolean
+Boolean(0); // false
+Boolean(""); // false
+Boolean([]); // true
+!!null; // false — двойное отрицание как приведение к boolean
 ```
 
 ---

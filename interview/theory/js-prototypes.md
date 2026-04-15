@@ -10,45 +10,49 @@
 
 ```js
 const animal = {
-  breathe() { return "breathing" }
-}
+  breathe() {
+    return "breathing";
+  },
+};
 
 const dog = {
-  bark() { return "woof" }
-}
+  bark() {
+    return "woof";
+  },
+};
 
 // Устанавливаем прототип:
-Object.setPrototypeOf(dog, animal)
+Object.setPrototypeOf(dog, animal);
 
-dog.bark()    // "woof"    — собственный метод
-dog.breathe() // "breathing" — найден в прототипе animal
-dog.toString() // "[object Object]" — найден в Object.prototype
+dog.bark(); // "woof"    — собственный метод
+dog.breathe(); // "breathing" — найден в прототипе animal
+dog.toString(); // "[object Object]" — найден в Object.prototype
 
 // Цепочка: dog → animal → Object.prototype → null
 
 // Проверки:
-dog.hasOwnProperty("bark")    // true — собственное
-dog.hasOwnProperty("breathe") // false — из прототипа
+dog.hasOwnProperty("bark"); // true — собственное
+dog.hasOwnProperty("breathe"); // false — из прототипа
 
-"bark" in dog     // true (включая прототипы)
-"breathe" in dog  // true (включая прототипы)
+"bark" in dog; // true (включая прототипы)
+"breathe" in dog; // true (включая прототипы)
 
 // Constructor function — классический способ:
 function Animal(name) {
-  this.name = name
+  this.name = name;
 }
-Animal.prototype.speak = function() {
-  return `${this.name} makes a sound`
-}
+Animal.prototype.speak = function () {
+  return `${this.name} makes a sound`;
+};
 
-const cat = new Animal("Cat")
-cat.speak() // "Cat makes a sound"
+const cat = new Animal("Cat");
+cat.speak(); // "Cat makes a sound"
 // cat → Animal.prototype → Object.prototype → null
 ```
 
 ---
 
-## 🤔 Вопрос 15: __proto__ vs prototype
+## 🤔 Вопрос 15: **proto** vs prototype
 
 **Вопрос:** В чём разница между `__proto__` и `prototype`?
 
@@ -59,22 +63,24 @@ cat.speak() // "Cat makes a sound"
 
 ```js
 function Dog(name) {
-  this.name = name
+  this.name = name;
 }
-Dog.prototype.bark = function() { return "woof" }
+Dog.prototype.bark = function () {
+  return "woof";
+};
 
-const rex = new Dog("Rex")
+const rex = new Dog("Rex");
 
 // prototype — у функции-конструктора:
-console.log(Dog.prototype)        // { bark: [Function], constructor: Dog }
-console.log(typeof Dog.prototype) // "object"
+console.log(Dog.prototype); // { bark: [Function], constructor: Dog }
+console.log(typeof Dog.prototype); // "object"
 
 // __proto__ — у экземпляра:
-console.log(rex.__proto__)             // { bark: [Function], constructor: Dog }
-console.log(rex.__proto__ === Dog.prototype) // true — один и тот же объект!
+console.log(rex.__proto__); // { bark: [Function], constructor: Dog }
+console.log(rex.__proto__ === Dog.prototype); // true — один и тот же объект!
 
 // Современная альтернатива __proto__:
-Object.getPrototypeOf(rex) === Dog.prototype // true (предпочтительно)
+Object.getPrototypeOf(rex) === Dog.prototype; // true (предпочтительно)
 
 // Схема:
 // Dog (функция)    → .prototype → { bark, constructor }
@@ -83,8 +89,8 @@ Object.getPrototypeOf(rex) === Dog.prototype // true (предпочтитель
 //                              Object.prototype → null
 
 // Не путай:
-console.log(rex.prototype)        // undefined — у экземпляров нет prototype
-console.log(Dog.__proto__)        // Function.prototype — Dog сам является объектом
+console.log(rex.prototype); // undefined — у экземпляров нет prototype
+console.log(Dog.__proto__); // Function.prototype — Dog сам является объектом
 ```
 
 ---
@@ -100,30 +106,30 @@ console.log(Dog.__proto__)        // Function.prototype — Dog сам явля�
 ```js
 // До ES6:
 function Animal(name) {
-  this.name = name
+  this.name = name;
 }
-Animal.prototype.speak = function() {
-  return `${this.name} speaks`
-}
+Animal.prototype.speak = function () {
+  return `${this.name} speaks`;
+};
 
 // ES6 class — то же самое под капотом:
 class Animal {
   constructor(name) {
-    this.name = name
+    this.name = name;
   }
   speak() {
-    return `${this.name} speaks`
+    return `${this.name} speaks`;
   }
 }
 
-typeof Animal // "function" — class IS a function!
+typeof Animal; // "function" — class IS a function!
 ```
 
 **Отличия class от функций-конструкторов:**
 
 ```js
 // 1. Нельзя вызвать без new:
-Animal()          // TypeError: Class constructor must be called with 'new'
+Animal(); // TypeError: Class constructor must be called with 'new'
 
 // 2. Не поднимается (hoisting): класс не доступен до объявления
 // new Foo() // ReferenceError
@@ -133,19 +139,23 @@ Animal()          // TypeError: Class constructor must be called with 'new'
 
 // 4. Приватные поля (ES2022) — принципиально новая возможность:
 class User {
-  #password = "secret"    // настоящий приватный — нельзя получить снаружи
+  #password = "secret"; // настоящий приватный — нельзя получить снаружи
 
-  check(pwd) { return pwd === this.#password }
+  check(pwd) {
+    return pwd === this.#password;
+  }
 }
-const u = new User()
-u.#password               // SyntaxError — не доступно снаружи!
+const u = new User();
+u.#password; // SyntaxError — не доступно снаружи!
 
 // 5. static поля и методы:
 class MathUtils {
-  static PI = 3.14159
-  static square(x) { return x * x }
+  static PI = 3.14159;
+  static square(x) {
+    return x * x;
+  }
 }
-MathUtils.square(4) // 16
+MathUtils.square(4); // 16
 ```
 
 ---
